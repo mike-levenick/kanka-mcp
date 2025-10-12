@@ -54,3 +54,23 @@ async def create_kanka_entity(endpoint: str, data: dict[str, Any]) -> dict[str, 
             return {"error": f"HTTP {e.response.status_code}: {e.response.text}"}
         except Exception as e:
             return {"error": str(e)}
+
+async def update_kanka_entity(endpoint: str, data: dict[str, Any]) -> dict[str, Any] | None:
+    """Update an entity in Kanka via PUT request."""
+    headers = {
+        "Authorization": f"Bearer {KANKA_API_TOKEN}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    url = f"{KANKA_API_BASE}/campaigns/{KANKA_CAMPAIGN_ID}/{endpoint}"
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.put(url, headers=headers, json=data, timeout=30.0)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": f"HTTP {e.response.status_code}: {e.response.text}"}
+        except Exception as e:
+            return {"error": str(e)}
