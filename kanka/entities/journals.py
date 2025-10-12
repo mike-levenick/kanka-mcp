@@ -86,10 +86,10 @@ def register_journal_tools(mcp: FastMCP):
 
     @mcp.tool()
     async def create_session_recap(session_title: str, entry: str) -> str:
-        """Create a new session recap journal entry under Campaign 2 Recaps.
+        """Create a new session recap post inside the Campaign 2 Recaps journal.
         
-        This tool specifically creates journal entries nested under the Campaign 2 Recaps
-        parent journal (ID: 152961).
+        This tool creates posts within the Campaign 2 Recaps journal (ID: 152961).
+        Posts appear as individual entries within the journal rather than as separate sub-journals.
         
         Session titles should follow the format: "Session ## - Descriptive Title"
         For example: "Session 1 - The Beginning", "Session 43 - Into the Abyss"
@@ -100,36 +100,35 @@ def register_journal_tools(mcp: FastMCP):
             session_title: The title/name of the session in format "Session ## - Title"
             entry: The HTML content of the session recap
         """
-        # Campaign 2 Recaps parent journal ID
-        CAMPAIGN_2_PARENT_ID = 152961
+        # Campaign 2 Recaps journal entity ID
+        CAMPAIGN_2_JOURNAL_ENTITY_ID = 152961
         
-        journal_data = {
+        post_data = {
             "name": session_title,
             "entry": entry,
-            "journal_id": CAMPAIGN_2_PARENT_ID,
-            "type": "Recap",
+            "entity_id": CAMPAIGN_2_JOURNAL_ENTITY_ID,
             "is_private": False
         }
         
-        result = await create_kanka_entity("journals", journal_data)
+        result = await create_kanka_entity(f"entities/{CAMPAIGN_2_JOURNAL_ENTITY_ID}/posts", post_data)
         
         if not result:
-            return "Failed to create session recap."
+            return "Failed to create session recap post."
         
         if "error" in result:
-            return f"Error creating session recap: {result['error']}"
+            return f"Error creating session recap post: {result['error']}"
         
         if "data" in result:
-            journal = result["data"]
+            post = result["data"]
             return f"""
-Successfully created session recap!
+Successfully created session recap post!
 
-Name: {journal.get('name')}
-ID: {journal.get('id')}
-Type: {journal.get('type')}
-Parent Journal: Campaign 2 Recaps (ID: {CAMPAIGN_2_PARENT_ID})
+Name: {post.get('name')}
+Post ID: {post.get('id')}
+Entity ID: {post.get('entity_id')}
+Visibility: {'Private' if post.get('is_private') else 'Public'}
 
-The session recap has been added to your campaign.
+The session recap post has been added to the Campaign 2 Recaps journal.
 """
         
-        return "Session recap created, but unexpected response format."
+        return "Session recap post created, but unexpected response format."
