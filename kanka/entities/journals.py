@@ -90,6 +90,7 @@ def register_journal_tools(mcp: FastMCP):
         
         This tool creates posts within the Campaign 2 Recaps journal (ID: 8112269).
         Posts appear as individual entries within the journal rather than as separate sub-journals.
+        The post will be positioned at the end of the current posts for proper ordering.
         
         Session titles should follow the format: "Session ## - Descriptive Title"
         For example: "Session 1 - The Beginning", "Session 43 - Into the Abyss"
@@ -103,10 +104,24 @@ def register_journal_tools(mcp: FastMCP):
         # Campaign 2 Recaps journal entity ID
         CAMPAIGN_2_JOURNAL_ENTITY_ID = 8112269
         
+        # First, get all current posts to determine the next position
+        posts_data = await make_kanka_request(f"entities/{CAMPAIGN_2_JOURNAL_ENTITY_ID}/posts")
+        
+        next_position = 1  # Default position if no posts exist
+        if posts_data and "data" in posts_data and posts_data["data"]:
+            # Find the highest position value among existing posts
+            max_position = 0
+            for post in posts_data["data"]:
+                position = post.get("position")
+                if position is not None and position > max_position:
+                    max_position = position
+            next_position = max_position + 1
+        
         post_data = {
             "name": session_title,
             "entry": entry,
             "entity_id": CAMPAIGN_2_JOURNAL_ENTITY_ID,
+            "position": next_position,
             "is_private": False
         }
         
@@ -126,9 +141,10 @@ Successfully created session recap post!
 Name: {post.get('name')}
 Post ID: {post.get('id')}
 Entity ID: {post.get('entity_id')}
+Position: {post.get('position')}
 Visibility: {'Private' if post.get('is_private') else 'Public'}
 
-The session recap post has been added to the Campaign 2 Recaps journal.
+The session recap post has been added to the Campaign 2 Recaps journal in the correct order.
 """
         
         return "Session recap post created, but unexpected response format."
