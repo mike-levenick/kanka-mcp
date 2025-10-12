@@ -88,7 +88,7 @@ def register_journal_tools(mcp: FastMCP):
     async def create_session_recap(session_title: str, entry: str) -> str:
         """Create a new session recap post inside the Campaign 2 Recaps journal.
         
-        This tool creates posts within the Campaign 2 Recaps journal (ID: 152961).
+        This tool creates posts within the Campaign 2 Recaps journal (ID: 8112269).
         Posts appear as individual entries within the journal rather than as separate sub-journals.
         
         Session titles should follow the format: "Session ## - Descriptive Title"
@@ -101,7 +101,7 @@ def register_journal_tools(mcp: FastMCP):
             entry: The HTML content of the session recap
         """
         # Campaign 2 Recaps journal entity ID
-        CAMPAIGN_2_JOURNAL_ENTITY_ID = 152961
+        CAMPAIGN_2_JOURNAL_ENTITY_ID = 8112269
         
         post_data = {
             "name": session_title,
