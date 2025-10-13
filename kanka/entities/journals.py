@@ -1,5 +1,5 @@
 from mcp.server.fastmcp import FastMCP
-from ..client import make_kanka_request, create_kanka_entity
+from ..client import make_kanka_request, create_kanka_entity, update_kanka_entity
 
 def format_journal_summary(journal: dict) -> str:
     """Format a journal into a readable summary."""
@@ -137,3 +137,131 @@ The session recap post has been added to the Campaign 2 Recaps journal in the co
 """
         
         return "Session recap post created, but unexpected response format."
+
+    @mcp.tool()
+    async def create_post(
+        entity_id: int,
+        title: str,
+        content: str,
+        position: int = None,
+        is_private: bool = False
+    ) -> str:
+        """Create a new post in any entity (journal, character, etc.).
+        
+        Args:
+            entity_id: The entity ID to create the post in
+            title: The title/name of the post
+            content: The HTML content of the post
+            position: Optional position for ordering (if None, will auto-calculate next position)
+            is_private: Whether the post is private (admin-only)
+        """
+        # If no position specified, calculate the next available position
+        if position is None:
+            posts_data = await make_kanka_request(f"entities/{entity_id}/posts")
+            
+            next_position = 1  # Default position if no posts exist
+            if posts_data and "data" in posts_data and posts_data["data"]:
+                # Find the highest position value among existing posts
+                max_position = 0
+                for post in posts_data["data"]:
+                    post_position = post.get("position")
+                    if post_position is not None and post_position > max_position:
+                        max_position = post_position
+                next_position = max_position + 1
+            
+            position = next_position
+        
+        post_data = {
+            "name": title,
+            "entry": content,
+            "entity_id": entity_id,
+            "position": position,
+            "is_private": is_private
+        }
+        
+        result = await create_kanka_entity(f"entities/{entity_id}/posts", post_data)
+        
+        if not result:
+            return "Failed to create post."
+        
+        if "error" in result:
+            return f"Error creating post: {result['error']}"
+        
+        if "data" in result:
+            post = result["data"]
+            return f"""
+Successfully created post!
+
+Title: {post.get('name')}
+Post ID: {post.get('id')}
+Entity ID: {post.get('entity_id')}
+Position: {post.get('position')}
+Visibility: {'Private' if post.get('is_private') else 'Public'}
+
+The post has been added to entity {entity_id}.
+"""
+        
+        return "Post created, but unexpected response format."
+
+    @mcp.tool()
+    async def update_post(
+        entity_id: int,
+        post_id: int,
+        title: str = None,
+        content: str = None,
+        position: int = None,
+        is_private: bool = None
+    ) -> str:
+        """Update an existing post in any entity.
+        
+        Only provided fields will be updated - others remain unchanged.
+        
+        Args:
+            entity_id: The entity ID containing the post
+            post_id: The ID of the post to update
+            title: New title/name for the post
+            content: New HTML content for the post
+            position: New position for ordering
+            is_private: New privacy setting
+        """
+        # Build update data with only provided values
+        update_data = {}
+        if title is not None:
+            update_data["name"] = title
+        if content is not None:
+            update_data["entry"] = content
+        if position is not None:
+            update_data["position"] = position
+        if is_private is not None:
+            update_data["is_private"] = is_private
+        
+        if not update_data:
+            return "No updates provided. Please specify at least one field to update."
+        
+        # Always include entity_id in update data
+        update_data["entity_id"] = entity_id
+        
+        result = await update_kanka_entity(f"entities/{entity_id}/posts/{post_id}", update_data)
+        
+        if not result:
+            return f"Failed to update post {post_id}."
+        
+        if "error" in result:
+            return f"Error updating post: {result['error']}"
+        
+        if "data" in result:
+            post = result["data"]
+            updated_fields = [k for k in update_data.keys() if k != "entity_id"]
+            return f"""
+Successfully updated post!
+
+Title: {post.get('name')}
+Post ID: {post.get('id')}
+Entity ID: {post.get('entity_id')}
+Position: {post.get('position')}
+Visibility: {'Private' if post.get('is_private') else 'Public'}
+
+Updated fields: {', '.join(updated_fields)}
+"""
+        
+        return "Post updated, but unexpected response format."
