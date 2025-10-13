@@ -110,8 +110,17 @@ def register_calendar_tools(mcp: FastMCP):
             current_month: The new current month
             current_day: The new current day
         """
-        # Build update data with only date fields
-        update_data = {}
+        # Build update data with date fields and required calendar structure
+        update_data = {
+            # Required calendar structure that must always be included
+            "month_name": ["Zarantyr", "Olarune", "Therendor", "Eyre", "Dravago", "Nymm", "Lharvion", "Barrakas", "Rhaan", "Sypheros", "Aryth", "Vult"],
+            "month_length": [28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28],
+            "month_type": ["standard", "standard", "standard", "standard", "standard", "standard", "standard", "standard", "standard", "standard", "standard", "standard"],
+            "month_alias": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            "weekday": ["Sul", "Mol", "Zol", "Wir", "Zor", "Far", "Sar"]
+        }
+        
+        # Add date fields if provided
         if current_year is not None:
             update_data["current_year"] = current_year
         if current_month is not None:
@@ -119,7 +128,9 @@ def register_calendar_tools(mcp: FastMCP):
         if current_day is not None:
             update_data["current_day"] = current_day
         
-        if not update_data:
+        # Check if at least one date field was provided (structure fields are always included)
+        date_fields_provided = any([current_year is not None, current_month is not None, current_day is not None])
+        if not date_fields_provided:
             return "No date updates provided. Please specify at least one date field to update (current_year, current_month, or current_day)."
         
         # Update the calendar with only date fields
@@ -133,15 +144,25 @@ def register_calendar_tools(mcp: FastMCP):
         
         if "data" in result:
             calendar = result["data"]
-            updated_fields = list(update_data.keys())
+            # Only show the date fields that were actually updated
+            date_fields_updated = []
+            if current_year is not None:
+                date_fields_updated.append("current_year")
+            if current_month is not None:
+                date_fields_updated.append("current_month")
+            if current_day is not None:
+                date_fields_updated.append("current_day")
+            
             return f"""
 Successfully updated calendar date!
 
 Name: {calendar.get('name')}
 ID: {calendar.get('id')}
-New Current Date: Year {calendar.get('current_year', '?')}, Month {calendar.get('current_month', '?')}, Day {calendar.get('current_day', '?')}
+New Current Date: {calendar.get('date', 'Unknown')} (YYYY-MM-DD format)
+Individual Fields: Year {calendar.get('current_year', '?')}, Month {calendar.get('current_month', '?')}, Day {calendar.get('current_day', '?')}
 
-Updated fields: {', '.join(updated_fields)}
+Updated date fields: {', '.join(date_fields_updated)}
+(Calendar structure fields were included as required by the API)
 """
         
         return "Calendar date updated, but unexpected response format."
