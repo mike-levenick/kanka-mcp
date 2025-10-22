@@ -13,6 +13,7 @@ ID: {event.get('id', 'N/A')}
 Entity ID: {event.get('entity_id', 'N/A')}
 Type: {event.get('type') or 'None'}
 Date: {event.get('date') or 'None'}
+Parent Event ID: {event.get('event_id') or 'None'}
 Calendar ID: {event.get('calendar_id') or 'None'}{calendar_date}
 Location ID: {event.get('location_id') or 'None'}
 Tags: {len(event.get('tags', []))} tag(s)
@@ -32,7 +33,8 @@ Name: {event.get('name', 'Unknown')}
 ID: {event.get('id', 'N/A')}
 Entity ID: {event.get('entity_id', 'N/A')}
 Type: {event.get('type') or 'None'}
-Date: {event.get('date') or 'None'}{calendar_info}
+Date: {event.get('date') or 'None'}
+Parent Event ID: {event.get('event_id') or 'None (Main Event)'}{calendar_info}
 Location ID: {event.get('location_id') or 'None'}
 
 Entry/Description:
@@ -93,6 +95,7 @@ def register_event_tools(mcp: FastMCP):
         entry: str = "",
         event_type: str = "",
         date: str = "",
+        parent_event_id: int = None,
         calendar_id: int = None,
         calendar_year: int = None,
         calendar_month: int = None,
@@ -116,6 +119,7 @@ def register_event_tools(mcp: FastMCP):
             entry: HTML description of the event
             event_type: Event type (e.g., "Battle", "Festival", "Meeting")
             date: A simple date string for display
+            parent_event_id: ID of the parent event (for sub-events)
             calendar_id: ID of the calendar this event is on
             calendar_year: The year on the calendar (required if calendar_id is set)
             calendar_month: The month number on the calendar (required if calendar_id is set)
@@ -145,6 +149,8 @@ def register_event_tools(mcp: FastMCP):
             event_data["calendar_day"] = calendar_day
 
         # Only include optional IDs if provided
+        if parent_event_id is not None:
+            event_data["event_id"] = parent_event_id
         if location_id is not None:
             event_data["location_id"] = location_id
         if entity_image_uuid is not None:
@@ -173,7 +179,8 @@ Successfully created event!
 Name: {event.get('name')}
 ID: {event.get('id')}
 Type: {event.get('type') or 'None'}
-Date: {event.get('date') or 'None'}{calendar_info}
+Date: {event.get('date') or 'None'}
+Parent Event ID: {event.get('event_id') or 'None'}{calendar_info}
 Location ID: {event.get('location_id') or 'None'}
 Visibility: {'Private' if event.get('is_private') else 'Public'}
 
@@ -188,6 +195,7 @@ The event has been added to your campaign.
         entry: str = None,
         event_type: str = None,
         date: str = None,
+        parent_event_id: int = None,
         calendar_id: int = None,
         calendar_year: int = None,
         calendar_month: int = None,
@@ -210,6 +218,7 @@ The event has been added to your campaign.
             entry: HTML description of the event
             event_type: Event type (e.g., "Battle", "Festival", "Meeting")
             date: A simple date string for display
+            parent_event_id: ID of the parent event (for sub-events)
             calendar_id: ID of the calendar this event is on
             calendar_year: The year on the calendar
             calendar_month: The month number on the calendar
@@ -247,6 +256,8 @@ The event has been added to your campaign.
             update_data["type"] = event_type
         if date is not None:
             update_data["date"] = date
+        if parent_event_id is not None:
+            update_data["event_id"] = parent_event_id
         if calendar_id is not None:
             update_data["calendar_id"] = calendar_id
         if calendar_year is not None:
@@ -295,7 +306,8 @@ Successfully updated event '{event_name}'!
 Name: {event.get('name')}
 ID: {event.get('id')}
 Type: {event.get('type') or 'None'}
-Date: {event.get('date') or 'None'}{calendar_info}
+Date: {event.get('date') or 'None'}
+Parent Event ID: {event.get('event_id') or 'None'}{calendar_info}
 Location ID: {event.get('location_id') or 'None'}
 Visibility: {'Private' if event.get('is_private') else 'Public'}
 
