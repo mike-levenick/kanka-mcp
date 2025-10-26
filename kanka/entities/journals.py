@@ -139,6 +139,82 @@ The session recap post has been added to the Campaign 2 Recaps journal in the co
         return "Session recap post created, but unexpected response format."
 
     @mcp.tool()
+    async def get_posts(entity_id: int) -> str:
+        """Get all posts from an entity (journal, character, location, etc.).
+
+        This retrieves all posts attached to an entity, ordered by position.
+        Useful for viewing session recaps, character notes, or any entity posts.
+
+        Args:
+            entity_id: The entity ID to retrieve posts from
+        """
+        data = await make_kanka_request(f"entities/{entity_id}/posts")
+
+        if not data:
+            return f"Unable to fetch posts for entity {entity_id}."
+
+        if "error" in data:
+            return f"Error: {data['error']}"
+
+        if "data" not in data or not data["data"]:
+            return f"No posts found for entity {entity_id}."
+
+        posts = data["data"]
+        # Sort by position (ascending order)
+        posts.sort(key=lambda p: p.get('position', 999999))
+
+        formatted_posts = []
+        for post in posts:
+            post_info = f"""
+Name: {post.get('name', 'Untitled')}
+Post ID: {post.get('id')}
+Position: {post.get('position')}
+Visibility: {'Private' if post.get('is_private') else 'Public'}
+Created: {post.get('created_at')}
+Updated: {post.get('updated_at')}
+
+Content Preview:
+{post.get('entry', 'No content')[:200]}{'...' if len(post.get('entry', '')) > 200 else ''}
+"""
+            formatted_posts.append(post_info.strip())
+
+        header = f"Found {len(posts)} post(s) for entity {entity_id}:\n"
+        return header + "\n---\n".join(formatted_posts)
+
+    @mcp.tool()
+    async def get_post(entity_id: int, post_id: int) -> str:
+        """Get detailed information about a specific post, including full content.
+
+        Args:
+            entity_id: The entity ID containing the post
+            post_id: The ID of the post to retrieve
+        """
+        data = await make_kanka_request(f"entities/{entity_id}/posts/{post_id}")
+
+        if not data:
+            return f"Unable to fetch post {post_id} from entity {entity_id}."
+
+        if "error" in data:
+            return f"Error: {data['error']}"
+
+        if "data" not in data:
+            return f"No post found with ID {post_id} in entity {entity_id}."
+
+        post = data["data"]
+        return f"""
+Name: {post.get('name', 'Untitled')}
+Post ID: {post.get('id')}
+Entity ID: {post.get('entity_id')}
+Position: {post.get('position')}
+Visibility: {'Private' if post.get('is_private') else 'Public'}
+Created: {post.get('created_at')}
+Updated: {post.get('updated_at')}
+
+Full Content:
+{post.get('entry', 'No content available.')}
+"""
+
+    @mcp.tool()
     async def create_post(
         entity_id: int,
         title: str,
