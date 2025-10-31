@@ -290,13 +290,15 @@ Privacy: {'Private' if member.get('is_private') else 'Public'}
             is_private: Whether this membership is private (admin-only)
         """
         member_data = {
+            "organisation_id": organization_id,  # Required: British spelling in API
             "character_id": character_id,
             "role": role,
             "is_private": is_private
         }
 
-        # Remove empty string values
-        member_data = {k: v for k, v in member_data.items() if v != ""}
+        # Remove empty string values (but keep organisation_id and character_id)
+        if member_data["role"] == "":
+            del member_data["role"]
 
         result = await create_kanka_entity(f"organisations/{organization_id}/organisation_members", member_data)
 
@@ -339,14 +341,37 @@ The character has been added as a member of the organization.
             role: New role for the member
             is_private: New privacy setting
         """
-        # Build update data with only provided values
-        update_data = {}
+        # First, get the existing member to retrieve character_id (required by API)
+        member_data = await make_kanka_request(
+            f"organisations/{organization_id}/organisation_members/{member_id}"
+        )
+
+        if not member_data or "data" not in member_data:
+            return f"Unable to fetch member {member_id} from organization {organization_id}."
+
+        if "error" in member_data:
+            return f"Error fetching member: {member_data['error']}"
+
+        existing_member = member_data["data"]
+        character_id = existing_member.get("character_id")
+
+        if not character_id:
+            return f"Member {member_id} has no character_id."
+
+        # Build update data with required fields and updates
+        # API requires both organisation_id and character_id (British spelling)
+        update_data = {
+            "organisation_id": organization_id,
+            "character_id": character_id
+        }
+
         if role is not None:
             update_data["role"] = role
         if is_private is not None:
             update_data["is_private"] = is_private
 
-        if not update_data:
+        # Check if any update fields were provided (besides required IDs)
+        if len(update_data) == 2:
             return "No updates provided. Please specify at least one field to update."
 
         result = await update_kanka_entity(
