@@ -184,7 +184,8 @@ def register_quest_tools(mcp: FastMCP):
 Successfully created quest!
 
 Name: {quest.get('name')}
-ID: {quest.get('id')}
+Quest ID: {quest.get('id')}
+Entity ID: {quest.get('entity_id')}
 Type: {quest.get('type') or 'None'}
 Status: {'Completed' if quest.get('is_completed') else 'In Progress'}
 Parent Quest ID: {quest.get('quest_id') or 'None'}

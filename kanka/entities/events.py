@@ -177,7 +177,8 @@ def register_event_tools(mcp: FastMCP):
 Successfully created event!
 
 Name: {event.get('name')}
-ID: {event.get('id')}
+Event ID: {event.get('id')}
+Entity ID: {event.get('entity_id')}
 Type: {event.get('type') or 'None'}
 Date: {event.get('date') or 'None'}
 Parent Event ID: {event.get('event_id') or 'None'}{calendar_info}

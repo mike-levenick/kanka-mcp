@@ -136,7 +136,8 @@ def register_organization_tools(mcp: FastMCP):
 Successfully created organization!
 
 Name: {organization.get('name')}
-ID: {organization.get('id')}
+Organization ID: {organization.get('id')}
+Entity ID: {organization.get('entity_id')}
 Type: {organization.get('type') or 'None'}
 Status: {'Defunct' if organization.get('is_defunct') else 'Active'}
 Parent Organization ID: {organization.get('organisation_id') or 'None'}

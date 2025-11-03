@@ -128,7 +128,8 @@ def register_location_tools(mcp: FastMCP):
 Successfully created location!
 
 Name: {location.get('name')}
-ID: {location.get('id')}
+Location ID: {location.get('id')}
+Entity ID: {location.get('entity_id')}
 Type: {location.get('type') or 'None'}
 Status: {'Destroyed' if location.get('is_destroyed') else 'Intact'}
 Parent Location ID: {location.get('location_id') or 'None'}
