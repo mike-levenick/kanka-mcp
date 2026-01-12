@@ -1,0 +1,3 @@
+Kanka API documents should be referenced whenever needed to gain context for syntax. The API documents are located at https://app.kanka.io/api-docs/1.0/ with specific entity endpoints following, such as Creatures documentation being available at https://app.kanka.io/api-docs/1.0/creatures . 
+
+Delete tools should not be created unless EXPLICITLY stated. These tools generally have CRU, like CRUD without the Delete. Otherwise, create, read, and update tools are all appreciated. 
