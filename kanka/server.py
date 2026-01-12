@@ -11,6 +11,7 @@ from .entities.events import register_event_tools
 from .entities.creatures import register_creature_tools
 from .entities.connections import register_connection_tools
 from .entities.tags import register_tag_tools
+from .entities.posts import register_post_tools
 
 # Initialize FastMCP server
 mcp = FastMCP("kanka")
@@ -26,6 +27,7 @@ register_event_tools(mcp)
 register_creature_tools(mcp)
 register_connection_tools(mcp)
 register_tag_tools(mcp)
+register_post_tools(mcp)
 
 def main():
     # Check if required env vars are set
