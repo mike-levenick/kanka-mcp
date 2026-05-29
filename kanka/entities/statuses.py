@@ -1,22 +1,35 @@
 from mcp.server.fastmcp import FastMCP
 from ..client import make_kanka_request
 
-async def fetch_entity_type_map() -> dict[int, str]:
-    """Return {entity_type_id: code} across all paginated pages."""
-    mapping: dict[int, str] = {}
+async def _fetch_all_pages(endpoint: str) -> tuple[list[dict] | None, str | None]:
+    """Walk every page of a Kanka list endpoint.
+
+    Returns (rows, None) on success, or (None, error_message) if any page
+    request returns an error response.
+    """
+    rows: list[dict] = []
     page = 1
     while True:
-        data = await make_kanka_request(f"entity_types?page={page}")
-        if not data or "data" not in data or not data["data"]:
-            break
-        for et in data["data"]:
-            mapping[et["id"]] = et["code"]
+        sep = "&" if "?" in endpoint else "?"
+        data = await make_kanka_request(f"{endpoint}{sep}page={page}")
+        if not data:
+            return None, f"Unable to fetch {endpoint}."
+        if "error" in data:
+            return None, data["error"]
+        if "data" not in data:
+            return None, f"Unexpected response shape from {endpoint}."
+        rows.extend(data["data"])
         meta = data.get("meta") or {}
         last_page = meta.get("last_page") or page
         if page >= last_page:
             break
         page += 1
-    return mapping
+    return rows, None
+
+async def fetch_entity_type_map() -> dict[int, str]:
+    """Return {entity_type_id: code} across all paginated pages."""
+    rows, _err = await _fetch_all_pages("entity_types")
+    return {et["id"]: et["code"] for et in (rows or [])}
 
 def register_status_tools(mcp: FastMCP):
     """Register all status-related tools with the MCP server."""
@@ -33,19 +46,13 @@ def register_status_tools(mcp: FastMCP):
             entity_type: Optional. Singular entity type code, e.g. "creature",
                 "character", "location", "quest", "race", "item", "organisation".
         """
-        statuses_data = await make_kanka_request("category_statuses")
-
-        if not statuses_data:
-            return "Unable to fetch statuses."
-
-        if "error" in statuses_data:
-            return f"Error: {statuses_data['error']}"
-
-        if "data" not in statuses_data or not statuses_data["data"]:
+        statuses, err = await _fetch_all_pages("category_statuses")
+        if err:
+            return f"Error: {err}"
+        if not statuses:
             return "No statuses found."
 
         entity_type_map = await fetch_entity_type_map()
-        statuses = statuses_data["data"]
 
         if entity_type:
             wanted = entity_type.lower().strip()

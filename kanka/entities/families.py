@@ -177,10 +177,12 @@ The family has been added to your campaign.
         """
         families_data = await make_kanka_request("families")
 
-        if not families_data or "data" not in families_data:
+        if not families_data:
             return f"Unable to search for family '{family_name}'."
         if "error" in families_data:
             return f"Error searching for family: {families_data['error']}"
+        if "data" not in families_data:
+            return f"Unexpected response searching for family '{family_name}'."
 
         target_family = None
         for f in families_data["data"]:

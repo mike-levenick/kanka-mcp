@@ -325,12 +325,23 @@ Updated fields: {', '.join(updated_fields)}
 
         url = f"{KANKA_API_BASE}/campaigns/{KANKA_CAMPAIGN_ID}/journals/{journal_id}"
 
+        cleanup_ok = False
+        cleanup_detail = ""
         async with httpx.AsyncClient() as client:
             try:
-                await client.delete(url, headers=headers, timeout=30.0)
-            except:
-                # Don't fail if cleanup fails - notification was still sent
-                pass
+                resp = await client.delete(url, headers=headers, timeout=30.0)
+                if resp.status_code < 400:
+                    cleanup_ok = True
+                else:
+                    cleanup_detail = f"HTTP {resp.status_code}"
+            except httpx.RequestError as e:
+                cleanup_detail = str(e)
+
+        cleanup_line = (
+            "The webhook notification has been triggered and the temporary journal has been cleaned up."
+            if cleanup_ok
+            else f"The webhook notification has been triggered, but cleanup of journal {journal_id} failed ({cleanup_detail}) — delete it manually."
+        )
 
         return f"""
 Successfully sent summary notification!
@@ -340,5 +351,5 @@ Summary: {summary}
 Notification Tag: {NOTIFICATION_TAG_ID}
 Parent Journal: Notification Triggers (ID: {NOTIFICATION_TRIGGERS_JOURNAL_ID})
 
-The webhook notification has been triggered and the temporary journal has been cleaned up.
+{cleanup_line}
 """

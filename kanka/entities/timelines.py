@@ -145,10 +145,12 @@ The timeline has been added to your campaign.
         """
         timelines_data = await make_kanka_request("timelines")
 
-        if not timelines_data or "data" not in timelines_data:
+        if not timelines_data:
             return f"Unable to search for timeline '{timeline_name}'."
         if "error" in timelines_data:
             return f"Error searching for timeline: {timelines_data['error']}"
+        if "data" not in timelines_data:
+            return f"Unexpected response searching for timeline '{timeline_name}'."
 
         target_tl = None
         for t in timelines_data["data"]:

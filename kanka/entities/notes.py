@@ -158,10 +158,12 @@ The note has been added to your campaign.
         """
         notes_data = await make_kanka_request("notes")
 
-        if not notes_data or "data" not in notes_data:
+        if not notes_data:
             return f"Unable to search for note '{note_name}'."
         if "error" in notes_data:
             return f"Error searching for note: {notes_data['error']}"
+        if "data" not in notes_data:
+            return f"Unexpected response searching for note '{note_name}'."
 
         target_note = None
         for n in notes_data["data"]:

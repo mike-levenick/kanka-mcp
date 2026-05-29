@@ -175,10 +175,12 @@ The race has been added to your campaign.
         """
         races_data = await make_kanka_request("races")
 
-        if not races_data or "data" not in races_data:
+        if not races_data:
             return f"Unable to search for race '{race_name}'."
         if "error" in races_data:
             return f"Error searching for race: {races_data['error']}"
+        if "data" not in races_data:
+            return f"Unexpected response searching for race '{race_name}'."
 
         target_race = None
         for r in races_data["data"]:

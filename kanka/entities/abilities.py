@@ -157,10 +157,12 @@ The ability has been added to your campaign.
         """
         abilities_data = await make_kanka_request("abilities")
 
-        if not abilities_data or "data" not in abilities_data:
+        if not abilities_data:
             return f"Unable to search for ability '{ability_name}'."
         if "error" in abilities_data:
             return f"Error searching for ability: {abilities_data['error']}"
+        if "data" not in abilities_data:
+            return f"Unexpected response searching for ability '{ability_name}'."
 
         target_ability = None
         for a in abilities_data["data"]:
