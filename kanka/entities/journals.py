@@ -2,9 +2,6 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 from ..client import (
     DISCORD_WEBHOOK_URL,
-    KANKA_API_BASE,
-    KANKA_API_TOKEN,
-    KANKA_CAMPAIGN_ID,
     create_kanka_entity,
     make_kanka_request,
     update_kanka_entity,
@@ -299,12 +296,18 @@ Updated fields: {', '.join(updated_fields)}
         # always points players at the latest recap.
         RECAP_PAGE_URL = "https://app.kanka.io/w/alae-draconis/entities/8112269"
 
+        # Discord embed field limits; truncate to avoid a 400 "Invalid Form Body".
+        title = session_title[:256]
+        description = summary[:4096]
+
         payload = {
             "embeds": [{
-                "title": session_title,
+                "title": title,
                 "url": RECAP_PAGE_URL,
-                "description": summary,
-            }]
+                "description": description,
+            }],
+            # Never ping the channel — a stray @everyone/@role in a recap shouldn't notify anyone.
+            "allowed_mentions": {"parse": []},
         }
 
         async with httpx.AsyncClient() as client:
